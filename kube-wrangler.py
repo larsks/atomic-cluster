@@ -9,12 +9,16 @@ import requests
 import sys
 
 
+args = None
+
+
 class KubeError(Exception):
     pass
 
 
 class NotRegistered(KubeError):
     pass
+
 
 def parse_args():
     p = argparse.ArgumentParser()
@@ -31,15 +35,15 @@ def parse_args():
     ops = p.add_mutually_exclusive_group()
     ops.add_argument('--register', '-r')
     ops.add_argument('--is-cluster-ready',
-                   action='store_true')
+                     action='store_true')
     ops.add_argument('--is-master',
-                   action='store_true')
+                     action='store_true')
     ops.add_argument('--master',
-                   action='store_true')
+                     action='store_true')
     ops.add_argument('--minions',
-                   action='store_true')
+                     action='store_true')
     ops.add_argument('--info',
-                   action='store_true')
+                     action='store_true')
     return p.parse_args()
 
 def register():
@@ -52,7 +56,7 @@ def register():
     res.raise_for_status()
 
     data = res.json()
-    
+ 
     with open(args.registration_cache, 'w') as fd:
         json.dump(data['node'], fd)
 
@@ -90,7 +94,8 @@ def get_nodes():
     data = res.json()
 
     return sorted(data['node']['nodes'],
-                   key=lambda node: node['createdIndex'])
+                  key=lambda node: node['createdIndex'])
+
 
 def get_master():
     master = get_nodes()[0]
@@ -124,11 +129,9 @@ def get_cluster_info():
 
     return (0, '\n'.join(text))
 
+
 def is_master():
     global args
-    url = '{etcd_server}/v2/keys/{cluster_id}/minions'.format(
-        etcd_server=args.etcd_server,
-        cluster_id=args.cluster_id)
 
     try:
         with open(args.registration_cache) as fd:
@@ -172,4 +175,3 @@ if __name__ == '__main__':
     except KubeError as exc:
         print 'ERROR:', exc
         sys.exit(1)
-
