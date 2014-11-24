@@ -38,6 +38,8 @@ def parse_args():
                    action='store_true')
     ops.add_argument('--minions',
                    action='store_true')
+    ops.add_argument('--info',
+                   action='store_true')
     return p.parse_args()
 
 def register():
@@ -110,6 +112,18 @@ def get_minion_addrs():
     return (0, ' '.join(minion['value'] for minion in minions))
 
 
+def get_cluster_info():
+    master = get_master()
+    minions = get_minions()
+
+    text = [
+        'size: %d' % (len(minions) + 1),
+        'master: %s' % master['value'],
+        'minions: %s' % ' '.join(minion['value'] for minion in minions),
+    ]
+
+    return (0, '\n'.join(text))
+
 def is_master():
     global args
     url = '{etcd_server}/v2/keys/{cluster_id}/minions'.format(
@@ -146,6 +160,8 @@ def main():
         retval, msg = get_master_addr()
     elif args.minions:
         retval, msg = get_minion_addrs()
+    elif args.info:
+        retval, msg = get_cluster_info()
 
     print msg
     sys.exit(retval)
