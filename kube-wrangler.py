@@ -3,8 +3,6 @@
 import argparse
 import errno
 import json
-import jsonpointer
-import os
 import requests
 import sys
 
