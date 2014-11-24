@@ -1,0 +1,11 @@
+#cloud-config
+write_files:
+  - path: /etc/flannel.json
+    owner: "root:root"
+    permissions: 0644
+    content: |
+      {
+        "Network": "10.61.0.0/16",
+        "Backend": {"Type": "vxlan"}
+      }
+

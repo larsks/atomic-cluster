@@ -1,0 +1,24 @@
+#cloud-config
+write_files:
+  - path: /etc/systemd/system/docker.service
+    owner: "root:root"
+    permissions: 0644
+    content: |
+      [Unit]
+      Description=Docker Application Container Engine
+      Documentation=http://docs.docker.com
+      After=network.target docker.socket
+      Requires=docker.socket
+
+      [Service]
+      Type=notify
+      EnvironmentFile=-/etc/sysconfig/docker
+      EnvironmentFile=-/etc/sysconfig/docker-storage
+      EnvironmentFile=/var/run/flannel/subnet.env
+      ExecStart=/usr/bin/docker -d -H fd:// --bip $FLANNEL_SUBNET --mtu $FLANNEL_MTU $OPTIONS $DOCKER_STORAGE_OPTIONS
+      LimitNOFILE=1048576
+      LimitNPROC=1048576
+      Restart=on-failure
+
+      [Install]
+      WantedBy=multi-user.target

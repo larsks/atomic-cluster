@@ -1,0 +1,8 @@
+#!/bin/sh
+
+nova boot --image larsks-atomic-20141121 \
+	--flavor m1.small \
+	--key-name lars \
+	--user-data userdata-discovery \
+	atomic-discovery
+

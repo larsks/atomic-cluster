@@ -1,0 +1,19 @@
+#cloud-config
+write_files:
+  - path: /etc/systemd/system/flanneld.service
+    owner: "root:root"
+    permissions: 0644
+    content: |
+      [Unit]
+      After=etcd.service
+      Before=docker.service
+
+      [Service]
+      Type=simple
+      ExecStartPre=/sbin/modprobe vxlan
+      ExecStart=/var/lib/flannel/flanneld
+      Restart=on-failure
+
+      [Install]
+      WantedBy=multi-user.target
+

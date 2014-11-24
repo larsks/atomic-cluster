@@ -1,0 +1,17 @@
+#!/bin/sh
+
+my_iface=$(ip route show | awk '$1 == "default" {print $5}')
+my_addr=$(ip addr show dev $my_iface | awk '$1 == "inet" {print $2}' | cut -f1 -d/)
+
+cat > /etc/etcd/etcd.conf <<EOF
+addr = "${my_addr}:4001"
+bind_addr = "0.0.0.0:4001"
+
+[peer]
+addr = "${my_addr}:7001"
+bind_addr = "0.0.0.0:7001"
+EOF
+
+systemctl enable etcd
+systemctl start etcd
+

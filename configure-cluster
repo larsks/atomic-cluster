@@ -1,0 +1,90 @@
+#!/bin/sh
+
+my_iface=$(ip route show | awk '$1 == "default" {print $5}')
+my_addr=$(ip addr show dev $my_iface | awk '$1 == "inet" {print $2}' | cut -f1 -d/)
+
+discovery_url=$(/usr/local/bin/ciquery /meta/discovery_url)
+cluster_size=$(/usr/local/bin/ciquery /meta/cluster_size)
+
+echo "configuring cluster of $cluster_size nodes using $discovery_url"
+
+cat > /etc/etcd/etcd.conf <<EOF
+addr = "${my_addr}:4001"
+bind_addr = "0.0.0.0:4001"
+discovery = "${discovery_url}"
+
+[peer]
+addr = "${my_addr}:7001"
+bind_addr = "0.0.0.0:7001"
+EOF
+
+# make sure systemd knows about new docker unit
+systemctl daemon-reload
+
+for svc in etcd docker.socket docker-storage-setup flanneld; do
+	systemctl enable $svc
+done
+
+systemctl start etcd
+
+# wait for etcd
+while ! curl -sf -o /dev/null http://localhost:4001/v2/keys/; do
+	echo waiting for etcd
+	sleep 1
+done
+
+curl -sf http://localhost:4001/v2/keys/coreos.com/network/config \
+	-XPUT -L -d value="$(cat /etc/flannel.json)"
+
+mkdir /var/lib/flannel
+curl -o /var/lib/flannel/flanneld http://people.redhat.com/lkellogg/bin/flanneld
+chmod 755 /var/lib/flannel/flanneld
+
+systemctl start flanneld
+systemctl start docker.socket
+
+kube-wrangler --register $my_addr
+
+echo "waiting for cluster"
+while ! kube-wrangler --is-cluster-ready -z $cluster_size; do
+	sleep 1
+done
+
+master_addr=$(kube-wrangler --master)
+minion_addrs=$(kube-wrangler --minions | tr ' ' ',')
+
+cat > /etc/kubernetes/apiserver <<-EOF
+KUBE_API_ADDRESS="0.0.0.0"
+KUBE_API_PORT="8080"
+KUBE_MASTER="${master_addr}:8080"
+MINION_ADDRESSES="${minion_addrs}"
+MINION_PORT="10250"
+EOF
+
+cat > /etc/kubernetes/kubelet <<EOF
+MINION_ADDRESS="$my_addr"
+MINION_PORT="10250"
+MINION_HOSTNAME="$my_addr"
+EOF
+
+cat >> /etc/environment <<EOF
+KUBERNETES_MASTER=http://${master_addr}:8080/
+EOF
+
+if kube-wrangler --is-master; then
+
+	echo configuring master services
+
+	for svc in kube-apiserver kube-controller-manager kube-scheduler; do
+		systemctl enable $svc
+		systemctl start $svc
+	done
+
+fi
+
+echo configuring minion services
+for svc in kubelet kube-proxy; do
+	systemctl enable $svc
+	systemctl start $svc
+done
+

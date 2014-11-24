@@ -1,0 +1,13 @@
+#!/bin/sh
+
+[ "$1" ] || exit 1
+
+nova boot --image larsks-atomic-20141121 \
+	--flavor m1.small \
+	--key-name lars \
+	--num-instances 3 \
+	--user-data userdata-cluster \
+	--meta discovery_url=http://$1:4001/v2/keys/_etcd/registry/$(uuidgen) \
+	--meta cluster_size=3 \
+	atomic-node
+

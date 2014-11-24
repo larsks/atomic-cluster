@@ -1,0 +1,6 @@
+#cloud-config
+write_files:
+  - path: /usr/local/bin/ciquery
+    owner: "root:root"
+    permissions: 0755
+    content: |
