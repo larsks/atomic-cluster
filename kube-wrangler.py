@@ -30,7 +30,7 @@ def parse_args():
     p.add_argument('--cluster-id', '-c',
                    default='kube')
 
-    ops = p.add_mutually_exclusive_group()
+    ops = p.add_mutually_exclusive_group(required=True)
     ops.add_argument('--register', '-r')
     ops.add_argument('--is-cluster-ready',
                      action='store_true')
