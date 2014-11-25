@@ -51,13 +51,13 @@ while ! kube-wrangler --is-cluster-ready -z $cluster_size; do
 done
 
 master_addr=$(kube-wrangler --master)
-minion_addrs=$(kube-wrangler --minions | tr ' ' ',')
+member_addrs=$(kube-wrangler --members | tr ' ' ',')
 
 cat > /etc/kubernetes/apiserver <<-EOF
 KUBE_API_ADDRESS="0.0.0.0"
 KUBE_API_PORT="8080"
 KUBE_MASTER="${master_addr}:8080"
-MINION_ADDRESSES="${minion_addrs}"
+MINION_ADDRESSES="${member_addrs}"
 MINION_PORT="10250"
 EOF
 
