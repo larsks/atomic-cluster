@@ -3,8 +3,8 @@
 my_iface=$(ip route show | awk '$1 == "default" {print $5}')
 my_addr=$(ip addr show dev $my_iface | awk '$1 == "inet" {print $2}' | cut -f1 -d/)
 
-discovery_url=$(/usr/local/bin/ciquery /meta/discovery_url)
-cluster_size=$(/usr/local/bin/ciquery /meta/cluster_size)
+discovery_url=$(ciquery /meta/discovery_url)
+cluster_size=$(ciquery /meta/cluster_size)
 
 echo "configuring cluster of $cluster_size nodes using $discovery_url"
 
