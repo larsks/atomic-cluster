@@ -14,7 +14,8 @@ DISCOVERY_USERDATA_FILES = \
 GENERATED = \
 	userdata-cluster \
 	userdata-discovery \
-	userdata.d/ciquery.yaml
+	userdata.d/ciquery.yaml \
+	userdata.d/kube-wrangler.yaml
 
 all: userdata-cluster userdata-discovery
 
