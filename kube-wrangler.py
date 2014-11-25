@@ -40,6 +40,8 @@ def parse_args():
                      action='store_true')
     ops.add_argument('--minions',
                      action='store_true')
+    ops.add_argument('--members',
+                     action='store_true')
     ops.add_argument('--info',
                      action='store_true')
     return p.parse_args()
@@ -93,6 +95,11 @@ def get_nodes():
 
     return sorted(data['node']['nodes'],
                   key=lambda node: node['createdIndex'])
+
+
+def get_member_addrs():
+    members = get_nodes()
+    return (0, ' '.join(member['value'] for member in members))
 
 
 def get_master():
@@ -161,6 +168,8 @@ def main():
         retval, msg = get_master_addr()
     elif args.minions:
         retval, msg = get_minion_addrs()
+    elif args.members:
+        retval, msg = get_member_addrs()
     elif args.info:
         retval, msg = get_cluster_info()
 
